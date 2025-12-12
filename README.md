@@ -13,3 +13,6 @@ Real-time Connect Four with human/bot matchmaking, reconnection support, leaderb
 4) Drop discs by clicking column headers; status/result updates stream live.  
 5) Reconnect test: copy the Game ID shown in the header, refresh the page, then join again with the **same username and Game ID**—both must match to resume the game.  
 6) Leaderboard/analytics: use Refresh buttons to verify completed games and recent events are visible.
+have to do optimization - 2d multiverse
+kafka check
+can add ai
