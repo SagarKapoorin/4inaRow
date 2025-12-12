@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CompletedGame {
+  id           String  @id @map("id")
+  playerRed    String  @map("player_red")
+  playerYellow String  @map("player_yellow")
+  winner       String? @map("winner")
+  isDraw       Boolean @map("is_draw")
+  moves        Int     @map("moves")
+  startedAt    BigInt  @map("started_at")
+  endedAt      BigInt  @map("ended_at")
+  durationMs   BigInt  @map("duration_ms")
+  isBotGame    Boolean @map("is_bot_game")
+
+  @@map("completed_games")
+  @@index([winner])
+}

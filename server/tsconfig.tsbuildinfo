@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/api/routes.ts","./src/config/index.ts","./src/game/bot.ts","./src/game/game.ts","./src/game/manager.ts","./src/infrastructure/analytics.ts","./src/infrastructure/storage.ts","./src/socket/index.ts"],"version":"5.9.3"}
