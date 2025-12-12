@@ -22,20 +22,21 @@ npm start
 - `npm run format` to apply Prettier formatting.
 - `npm run format:check` to verify formatting in CI.
 
-## Environment
-
-- `PORT` (default: 4000)
-- `DATABASE_URL` (required): Postgres connection string.
-- `KAFKA_BROKERS` (optional): Comma-separated Kafka brokers for analytics publishing.
-
 ## API
 
 - `GET /health` – basic health check.
 - `GET /leaderboard` – current win totals.
+- `GET /analytics` – latest Kafka analytics events (when `KAFKA_BROKERS` is configured).
 - WebSocket (Socket.IO) events:
   - `join`: `{ username: string, gameId?: string }` (rejoin with username or gameId).
   - `move`: `column: number`.
   - Server emits `state` updates, `waiting` message when queued, and `error_message` on invalid actions.
+
+## Environment
+
+- `PORT` (default: 4000)
+- `DATABASE_URL` (required): Postgres connection string.
+- `KAFKA_BROKERS` (optional): Comma-separated Kafka brokers for analytics publishing/consuming.
 
 ## Notes
 
@@ -45,9 +46,9 @@ npm start
 
 ## Project structure
 
-- `src/config` — env loading (`index.ts`)
-- `src/api` — HTTP routes (`routes.ts`)
-- `src/socket` — Socket.IO wiring (`index.ts`)
-- `src/game` — core game logic, bot, manager (`game.ts`, `bot.ts`, `manager.ts`)
-- `src/infrastructure` — Prisma/Postgres persistence, Kafka producer (`storage.ts`, `analytics.ts`)
-- `tests/` — Jest tests
+- `src/config` – env loading (`index.ts`)
+- `src/api` – HTTP routes (`routes.ts`)
+- `src/socket` – Socket.IO wiring (`index.ts`)
+- `src/game` – core game logic, bot, manager (`game.ts`, `bot.ts`, `manager.ts`)
+- `src/infrastructure` – Prisma/Postgres persistence, Kafka producer/consumer (`storage.ts`, `analytics.ts`)
+- `tests/` – Jest tests
