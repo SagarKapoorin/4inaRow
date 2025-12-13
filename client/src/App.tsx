@@ -25,46 +25,10 @@ interface LeaderboardEntry {
   wins: number;
 }
 
-type AnalyticsEvent =
-  | {
-      type: 'game_started';
-      gameId: string;
-      players: { red: string; yellow: string };
-      isBot: boolean;
-      at: number;
-    }
-  | {
-      type: 'move_made';
-      gameId: string;
-      by: string;
-      column: number;
-      moveNumber: number;
-      at: number;
-    }
-  | {
-      type: 'game_finished';
-      gameId: string;
-      winner: string | null;
-      isDraw: boolean;
-      durationMs: number;
-      at: number;
-    };
-
-type AnalyticsRecord = AnalyticsEvent & { id: string };
-
 const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
-}
-
-function formatDuration(ms: number) {
-  if (ms < 1000) return `${ms}ms`;
-  const sec = Math.round(ms / 100) / 10;
-  if (sec < 60) return `${sec}s`;
-  const min = Math.floor(sec / 60);
-  const rem = Math.round(sec % 60);
-  return `${min}m ${rem}s`;
 }
 
 function App() {
@@ -77,7 +41,6 @@ function App() {
   const [error, setError] = useState('');
   const [connecting, setConnecting] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [analytics, setAnalytics] = useState<AnalyticsRecord[]>([]);
   const [statusText, setStatusText] = useState('Disconnected');
   const [matchFound, setMatchFound] = useState<{ opponent: string; gameId: string } | null>(
     null,
@@ -94,26 +57,9 @@ function App() {
     }
   }, []);
 
-  const fetchAnalytics = useCallback(async () => {
-    try {
-      const res = await fetch(`${backendUrl}/analytics`);
-      if (!res.ok) return;
-      const data = (await res.json()) as AnalyticsRecord[];
-      setAnalytics(data);
-    } catch {
-      // ignore fetch errors in UI
-    }
-  }, []);
-
   useEffect(() => {
     fetchLeaderboard();
-    fetchAnalytics();
-  }, [fetchLeaderboard, fetchAnalytics]);
-
-  useEffect(() => {
-    const interval = setInterval(fetchAnalytics, 5000);
-    return () => clearInterval(interval);
-  }, [fetchAnalytics]);
+  }, [fetchLeaderboard]);
 
   useEffect(() => {
     return () => {
@@ -233,34 +179,6 @@ function App() {
     yourColor && game
       ? `Opponent: ${yourColor === 'red' ? game.opponents.yellow : game.opponents.red} (${yourColor === 'red' ? 'yellow' : 'red'})`
       : '';
-
-  const analyticsSummary = (evt: AnalyticsRecord) => {
-    switch (evt.type) {
-      case 'game_started':
-        return `Game ${evt.gameId} started: ${evt.players.red} vs ${evt.players.yellow}${evt.isBot ? ' (bot)' : ''}`;
-      case 'move_made':
-        return `Move #${evt.moveNumber} by ${evt.by} in game ${evt.gameId}`;
-      case 'game_finished': {
-        if (evt.isDraw) return `Game ${evt.gameId} finished: Draw`;
-        return `Game ${evt.gameId} finished: ${evt.winner ?? 'Unknown'} won`;
-      }
-      default:
-        return 'Unknown event';
-    }
-  };
-
-  const analyticsMeta = (evt: AnalyticsRecord) => {
-    switch (evt.type) {
-      case 'game_started':
-        return `Started ${new Date(evt.at).toLocaleTimeString()}`;
-      case 'move_made':
-        return `Column ${evt.column} -> ${new Date(evt.at).toLocaleTimeString()}`;
-      case 'game_finished':
-        return `Duration ${formatDuration(evt.durationMs)} -> ${new Date(evt.at).toLocaleTimeString()}`;
-      default:
-        return '';
-    }
-  };
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -416,75 +334,33 @@ function App() {
             <div className="text-xs text-slate-500">Click a column header to drop a disc.</div>
           </div>
 
-          <div className="space-y-3">
-            <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Leaderboard</h2>
-                <button
-                  className="rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-300"
-                  onClick={fetchLeaderboard}
-                >
-                  Refresh
-                </button>
-              </div>
-              {leaderboard.length === 0 ? (
-                <p className="text-sm text-slate-500">No games yet.</p>
-              ) : (
-                <ul className="space-y-2 text-sm">
-                  {leaderboard.map((entry) => (
-                    <li
-                      key={entry.username}
-                      className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
-                    >
-                      <span>{entry.username}</span>
-                      <span className="font-semibold text-slate-800">
-                        {entry.wins} win{entry.wins === 1 ? '' : 's'}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+          <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Leaderboard</h2>
+              <button
+                className="rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-300"
+                onClick={fetchLeaderboard}
+              >
+                Refresh
+              </button>
             </div>
-
-            <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold">Analytics (Kafka)</h2>
-                  <p className="text-xs text-slate-500">
-                    Latest analytics events (Kafka if configured) — showing newest 4.
-                  </p>
-                </div>
-                <button
-                  className="rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-300"
-                  onClick={fetchAnalytics}
-                >
-                  Refresh
-                </button>
-              </div>
-              {analytics.length === 0 ? (
-                <p className="text-sm text-slate-500">No analytics events yet.</p>
-              ) : (
-                <ul className="space-y-2 text-sm">
-                  {analytics.slice(0, 4).map((evt) => (
-                    <li
-                      key={evt.id}
-                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="inline-flex items-center gap-2 font-semibold text-slate-800">
-                          <span className="rounded-full bg-slate-200 px-2 py-1 text-xs uppercase tracking-wide text-slate-700">
-                            {evt.type.replace(/_/g, ' ')}
-                          </span>
-                          {analyticsSummary(evt)}
-                        </span>
-                        <span className="text-xs text-slate-500">{new Date(evt.at).toLocaleTimeString()}</span>
-                      </div>
-                      <div className="text-xs text-slate-600">{analyticsMeta(evt)}</div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+            {leaderboard.length === 0 ? (
+              <p className="text-sm text-slate-500">No games yet.</p>
+            ) : (
+              <ul className="space-y-2 text-sm">
+                {leaderboard.map((entry) => (
+                  <li
+                    key={entry.username}
+                    className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
+                  >
+                    <span>{entry.username}</span>
+                    <span className="font-semibold text-slate-800">
+                      {entry.wins} win{entry.wins === 1 ? '' : 's'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </section>
       </div>

@@ -1,6 +1,6 @@
 # 4 in a Row Backend (Node.js + TypeScript)
 
-Real-time Connect Four server with human/bot matchmaking, reconnection, Kafka analytics hooks, and Postgres persistence for completed games.
+Real-time Connect Four server with human/bot matchmaking, reconnection, Kafka analytics publishing, Redis-backed rate limiting, and Postgres persistence for completed games.
 
 ## Quick start (Postgres required)
 
@@ -24,9 +24,8 @@ npm start
 
 ## API
 
-- `GET /health` – basic health check.
-- `GET /leaderboard` – current win totals.
-- `GET /analytics` – latest Kafka analytics events (when `KAFKA_BROKERS` is configured).
+- `GET /health` — basic health check.
+- `GET /leaderboard` — current win totals.
 - WebSocket (Socket.IO) events:
   - `join`: `{ username: string, gameId?: string }` (rejoin with username or gameId).
   - `move`: `column: number`.
@@ -36,19 +35,21 @@ npm start
 
 - `PORT` (default: 4000)
 - `DATABASE_URL` (required): Postgres connection string.
-- `KAFKA_BROKERS` (optional): Comma-separated Kafka brokers for analytics publishing/consuming.
+- `KAFKA_BROKERS` (optional): Comma-separated Kafka brokers for analytics publishing.
+- `REDIS_URL` (optional): Redis URL for the rate-limit store; falls back to in-memory limiter if unset or unavailable.
 
 ## Notes
 
 - Matchmaking waits up to 10s before pairing you with a competitive bot.
 - Disconnects allow 30s to reconnect (by username or gameId) before the opponent is declared winner.
-- Completed games are persisted and fed into the leaderboard; analytics events are published to Kafka when configured.
+- Completed games are persisted and fed into the leaderboard; analytics events are published to Kafka when configured (no HTTP analytics endpoint).
+- Rate limiting: 200 requests per 15 minutes per client key; uses Redis when `REDIS_URL` is set, otherwise in-memory.
 
 ## Project structure
 
-- `src/config` – env loading (`index.ts`)
-- `src/api` – HTTP routes (`routes.ts`)
-- `src/socket` – Socket.IO wiring (`index.ts`)
-- `src/game` – core game logic, bot, manager (`game.ts`, `bot.ts`, `manager.ts`)
-- `src/infrastructure` – Prisma/Postgres persistence, Kafka producer/consumer (`storage.ts`, `analytics.ts`)
-- `tests/` – Jest tests
+- `src/config` — env loading (`index.ts`)
+- `src/api` — HTTP routes (`routes.ts`)
+- `src/socket` — Socket.IO wiring (`index.ts`)
+- `src/game` — core game logic, bot, manager (`game.ts`, `bot.ts`, `manager.ts`)
+- `src/infrastructure` — Prisma/Postgres persistence, Kafka producer (`storage.ts`, `analytics.ts`), rate limiter (`rateLimiter.ts`)
+- `tests/` — Jest tests

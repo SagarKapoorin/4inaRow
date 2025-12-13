@@ -122,16 +122,8 @@ export class GameManager {
       } else if (managed.isBotGame && game.getPlayerColor(socket.id) !== game.current) {
         this.makeBotMove(managed);
       }
-    } catch (err: any | { message?: string } | string | null | undefined) {
-      if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
-        socket.emit('error_message', err.message);
-        return;
-      }
-      if (typeof err === 'string') {
-        socket.emit('error_message', err);
-        return;
-      }
-      socket.emit('error_message', 'Move failed');
+    } catch (err: unknown) {
+      socket.emit('error_message', extractErrorMessage(err));
     }
   }
 
@@ -263,4 +255,18 @@ export class GameManager {
       }
     });
   }
+}
+
+type MessageCarrier = { message: string };
+
+function extractErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'string') return error;
+  if (isMessageCarrier(error)) return error.message;
+  return 'Move failed';
+}
+
+function isMessageCarrier(value: unknown): value is MessageCarrier {
+  if (typeof value !== 'object' || value === null || !('message' in value)) return false;
+  return typeof (value as { message?: unknown }).message === 'string';
 }
