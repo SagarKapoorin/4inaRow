@@ -1,4 +1,4 @@
-# Emmitr — 4 in a Row
+# Emmitr — 4 in a Row - Backend Heavy
 
 Real-time Connect Four with human/bot matchmaking, reconnection support, leaderboard, and Kafka analytics publishing (no analytics UI).
 
