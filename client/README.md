@@ -28,6 +28,6 @@ VITE_API_URL=http://localhost:4000 npm run dev
 
 ## How to use
 
-1. Enter a username and click Join / Rejoin. Use a Game ID only when reconnecting to a previous game after a refresh/crash—both the username and Game ID must match to rejoin successfully.
+1. Enter a username and click Join / Rejoin. Use a Game ID only when reconnecting to a previous game after a refresh/crash; both the username and Game ID must match to rejoin successfully.
 2. The app auto-matches you with another player; if no opponent joins within 10 seconds, a bot fills the seat. Click a column to drop your disc.
 3. Board updates stream in real time; results show win/loss/draw. Leaderboard shows wins from completed games (Refresh button to reload). Analytics are not shown in the UI; events are published to Kafka by the backend only.

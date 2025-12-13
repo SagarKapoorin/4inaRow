@@ -24,8 +24,8 @@ npm start
 
 ## API
 
-- `GET /health` — basic health check.
-- `GET /leaderboard` — current win totals.
+- `GET /health` - basic health check.
+- `GET /leaderboard` - current win totals.
 - WebSocket (Socket.IO) events:
   - `join`: `{ username: string, gameId?: string }` (rejoin with username or gameId).
   - `move`: `column: number`.
@@ -35,7 +35,8 @@ npm start
 
 - `PORT` (default: 4000)
 - `DATABASE_URL` (required): Postgres connection string.
-- `KAFKA_BROKERS` (optional): Comma-separated Kafka brokers for analytics publishing.
+- `FRONTEND_URL` (optional): allowed origin for HTTP and Socket.IO CORS (defaults to `*`).
+- `KAFKA_BROKERS` (optional): comma-separated brokers for analytics publishing; add `KAFKA_SASL_USERNAME`, `KAFKA_SASL_PASSWORD`, `KAFKA_SASL_MECHANISM` (`plain`, `scram-sha-256`, `scram-sha-512`), and `KAFKA_SSL` (`true`/`1`) if your cluster needs auth/TLS.
 - `REDIS_URL` (optional): Redis URL for the rate-limit store; falls back to in-memory limiter if unset or unavailable.
 
 ## Notes
@@ -47,9 +48,9 @@ npm start
 
 ## Project structure
 
-- `src/config` — env loading (`index.ts`)
-- `src/api` — HTTP routes (`routes.ts`)
-- `src/socket` — Socket.IO wiring (`index.ts`)
-- `src/game` — core game logic, bot, manager (`game.ts`, `bot.ts`, `manager.ts`)
-- `src/infrastructure` — Prisma/Postgres persistence, Kafka producer (`storage.ts`, `analytics.ts`), rate limiter (`rateLimiter.ts`)
-- `tests/` — Jest tests
+- `src/config` - env loading (`index.ts`)
+- `src/api` - HTTP routes (`routes.ts`)
+- `src/socket` - Socket.IO wiring (`index.ts`)
+- `src/game` - core game logic, bot, manager (`game.ts`, `bot.ts`, `manager.ts`)
+- `src/infrastructure` - Prisma/Postgres persistence, Kafka producer (`storage.ts`, `analytics.ts`), rate limiter (`rateLimiter.ts`)
+- `tests/` - Jest tests
