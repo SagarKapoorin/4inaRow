@@ -1,5 +1,7 @@
 # Emmitr — 4 in a Row - Backend Heavy
 
+Live Link: https://4inrow3.netlify.app
+
 Real-time Connect Four with human/bot matchmaking, reconnection support, leaderboard, and Kafka analytics publishing (no analytics UI).
 
 - Frontend docs: see `client/README.md` for setup, running, and UI behavior.
