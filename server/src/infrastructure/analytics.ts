@@ -1,4 +1,5 @@
-import { Kafka, Producer, Consumer, logLevel } from 'kafkajs';
+import { Kafka, Producer, Consumer, logLevel, SASLOptions, KafkaConfig } from 'kafkajs';
+import { env } from '../config/index.js';
 
 export type AnalyticsEvent =
   | {
@@ -30,14 +31,18 @@ export class AnalyticsProducer {
   private topic: string;
 
   constructor(topic = 'connect4.analytics') {
-    const brokers = process.env.KAFKA_BROKERS?.split(',').filter(Boolean);
+    const brokers = env.kafkaBrokers?.split(',').filter(Boolean);
     this.topic = topic;
     if (brokers && brokers.length > 0) {
-      const kafka = new Kafka({
+      const kafkaConfig: KafkaConfig = {
         brokers,
         clientId: 'connect4-backend',
         logLevel: logLevel.NOTHING,
-      });
+      };
+      const sasl = buildSaslConfig();
+      if (sasl) kafkaConfig.sasl = sasl;
+      if (shouldUseSsl()) kafkaConfig.ssl = true;
+      const kafka = new Kafka(kafkaConfig);
       this.producer = kafka.producer();
       this.producer.connect().catch(() => {
         this.producer = null;
@@ -65,13 +70,17 @@ export async function startAnalyticsConsumer({
   groupId?: string;
   handlers?: { log?: (msg: string) => void; onEvent?: (event: AnalyticsEvent) => void };
 }): Promise<Consumer | null> {
-  const brokers = process.env.KAFKA_BROKERS?.split(',').filter(Boolean);
+  const brokers = env.kafkaBrokers?.split(',').filter(Boolean);
   if (!brokers || brokers.length === 0) return null;
-  const kafka = new Kafka({
+  const kafkaConfig: KafkaConfig = {
     brokers,
     clientId: 'connect4-analytics',
     logLevel: logLevel.INFO,
-  });
+  };
+  const sasl = buildSaslConfig();
+  if (sasl) kafkaConfig.sasl = sasl;
+  if (shouldUseSsl()) kafkaConfig.ssl = true;
+  const kafka = new Kafka(kafkaConfig);
   const consumer = kafka.consumer({ groupId });
   await consumer.connect();
   await consumer.subscribe({ topic, fromBeginning: false });
@@ -88,4 +97,21 @@ export async function startAnalyticsConsumer({
     },
   });
   return consumer;
+}
+
+function buildSaslConfig(): SASLOptions | null {
+  const username = env.kafkaSaslUsername;
+  const password = env.kafkaSaslPassword;
+  const mechanismEnv = env.kafkaSaslMechanism?.toLowerCase();
+  if (!username || !password || !mechanismEnv) return null;
+  const mechanism = mechanismEnv as SASLOptions['mechanism'];
+  if (mechanism === 'plain' || mechanism === 'scram-sha-256' || mechanism === 'scram-sha-512') {
+    return { mechanism, username, password };
+  }
+  return null;
+}
+
+function shouldUseSsl(): boolean {
+  if (!env.kafkaSsl) return false;
+  return env.kafkaSsl.toLowerCase() === 'true' || env.kafkaSsl === '1';
 }
