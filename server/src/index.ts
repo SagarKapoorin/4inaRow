@@ -30,7 +30,7 @@ app.use(
 );
 app.use(
   cors({
-    origin: '*',
+    origin: env.frontendUrl || '*',
   }),
 );
 app.use(hpp());
@@ -64,7 +64,7 @@ app.use(errorHandler);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: env.frontendUrl || '*',
   },
 });
 

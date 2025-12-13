@@ -8,6 +8,7 @@ export const env = {
   kafkaSaslMechanism: process.env.KAFKA_SASL_MECHANISM,
   kafkaSsl: process.env.KAFKA_SSL,
   redisUrl: process.env.REDIS_URL,
+  frontendUrl: process.env.FRONTEND_URL,
 };
 export function assertEnv(): void {
   if (!env.databaseUrl) {
